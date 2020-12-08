@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:magic_fund/box/fund_bean.dart';
 import 'package:magic_fund/fund_util.dart';
 import 'package:preferences/preference_service.dart';
@@ -25,7 +26,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // UI
   TextEditingController text = TextEditingController();
-  GlobalKey<RefreshIndicatorState> refresh = GlobalKey();
+  EasyRefreshController refreshController = EasyRefreshController();
 
   @override
   void initState() {
@@ -50,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
     await EasyLoading.dismiss();
-    refresh.currentState.show();
+    refreshController.callRefresh();
   }
 
   _getHistoryData(String code) async {
@@ -87,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 await EasyLoading.dismiss();
                 Navigator.pop(context);
 
-                refresh.currentState.show();
+                refreshController.callRefresh();
               },
               child: Text('确认')
             )
@@ -99,7 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// 刷新当前数据
   Future<void> _refreshData() async {
-
     // 防止没有
     var removeCodeList = List();
 
@@ -107,11 +107,12 @@ class _MyHomePageState extends State<MyHomePage> {
       try {
         var currentInfo = await HttpForData.getCurrentData(value.code);
         value.name = currentInfo.name;
-        value.netWorth = double.parse(currentInfo.gsz);
+        value.valuation = double.parse(currentInfo.gsz);
         value.growthRate = double.parse(currentInfo.gszzl);
+        value.estimatedTime = currentInfo.gztime;
 
         if (fundMap.containsKey(value.code)) {
-          var fundInfoEntity = FundInfoEntity()..netWorth = value.netWorth;
+          var fundInfoEntity = FundInfoEntity()..netWorth = value.valuation;
           await FundUtil.calculateOne(fundInfoEntity, fundMap[value.code].sublist(0, FundUtil.recentNum-1));
           value.result = fundInfoEntity.result;
         } else {
@@ -120,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }catch(e) {
         if (fundMap.containsKey(value.code)) {
           value.name = '';
-          value.netWorth = null;
+          value.valuation = null;
           value.growthRate = null;
           value.result = fundMap[value.code].first.result;
         } else {
@@ -136,14 +137,32 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    String _getTime() {
+      if (fundInfo.isEmpty) {
+        return '';
+      } else {
+        return fundInfo.first.estimatedTime;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('科学养鸡'),
       ),
       body: Center(
-        child: RefreshIndicator(
-          key: refresh,
+        child: EasyRefresh(
+          controller: refreshController,
           onRefresh: _refreshData,
+          header: ClassicalHeader(
+            refreshText: '下拉刷新',
+            refreshReadyText: '释放立即刷新',
+            refreshingText: '正在刷新...',
+            refreshedText: '刷新成功',
+            refreshFailedText: '刷新失败',
+            showInfo: fundInfo.isNotEmpty,
+            infoText: _getTime(),
+          ),
           child: ListView.separated(
               itemBuilder: (context, index) {
                 var info = fundInfo[index];
@@ -153,15 +172,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   title: Text('${info.name??''}'),
                   subtitle: Row(
                     children: [
-                      Text('估值：${info.netWorth??''}'),
+                      Text('估值：${info.valuation??''}'),
                       Padding(
                         padding: EdgeInsets.only(left: 20),
                         child: info.growthRate != null ? Text(
-                          '${info.growthRate}',
-                          style: TextStyle(
-                            color: info.growthRate > 0 ? Colors.deepOrange[400]
-                                : Colors.green[400]
-                          )
+                            '${info.growthRate}',
+                            style: TextStyle(
+                                color: info.growthRate > 0 ? Colors.deepOrange[400]
+                                    : Colors.green[400]
+                            )
                         ): Text(''),
                       )
                     ],
@@ -170,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
               separatorBuilder: (context, index) => Divider(),
-            itemCount: fundInfo.length
+              itemCount: fundInfo.length
           ),
         ),
       ),

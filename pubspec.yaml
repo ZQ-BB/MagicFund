@@ -28,6 +28,7 @@ dependencies:
   objectbox: ^0.10.0
   preferences: ^5.2.1
   flutter_easyloading: ^2.2.1
+  flutter_easyrefresh: ^2.1.6
 
 dev_dependencies:
   flutter_test:

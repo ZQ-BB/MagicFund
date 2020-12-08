@@ -77,7 +77,7 @@ class FundUtil {
     if(a && fundInfo.netWorth < fundInfo.recentAverageTop) {
       fundInfo.result = '清仓';
     } else if(b && c && fundInfo.netWorth < fundInfo.stopMoney) {
-      fundInfo.result = '止盈加仓';
+      fundInfo.result = '止盈赎回';
     } else if(fundInfo.netWorth > fundInfo.addMoney) {
       fundInfo.result = '观望期';
     } else if(fundInfo.netWorth > fundInfo.recentAverageBottom) {
