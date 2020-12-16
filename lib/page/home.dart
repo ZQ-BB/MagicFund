@@ -3,12 +3,13 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:magic_fund/box/fund_bean.dart';
-import 'package:magic_fund/fund_util.dart';
+import 'package:magic_fund/bean/fund_info.dart';
+import 'package:magic_fund/db/fund_bean.dart';
+import 'package:magic_fund/net/http_for_data.dart';
+import 'package:magic_fund/util/data_manager.dart';
+import 'package:magic_fund/util/fund_util.dart';
 import 'package:preferences/preference_service.dart';
 
-import 'fund_info.dart';
-import 'net/http_for_data.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key}) : super(key: key);
@@ -37,26 +38,37 @@ class _MyHomePageState extends State<MyHomePage> {
 
   initData() async{
     await EasyLoading.show();
+    // 获取本地添加的基金列表
     var list = PrefService.sharedPreferences.getStringList('fund_code_list');
+
     if (list == null) {
       await EasyLoading.dismiss();
       return;
     }
-    for(var i = 0; i<list.length; i++) {
+
+    List flag = List(list.length);
+    var i = 0;
+    list.forEach((element) async{
+      flag[i] = 0;
       try {
-        await _getHistoryData(list[i]);
-        fundInfo.add(FundInfo()..code = list[i]);
+        await _getHistoryData(element);
+        fundInfo.add(FundInfo()..code = element);
+        flag[i] = 1;
+
+        if(!flag.contains(0)) {
+          await EasyLoading.dismiss();
+          refreshController.callRefresh();
+        }
+        i++;
       }catch (e) {
         print(e);
       }
-    }
-    await EasyLoading.dismiss();
-    refreshController.callRefresh();
+    });
   }
 
   _getHistoryData(String code) async {
     if(!fundMap.containsKey(code)) {
-      fundMap[code] = await HttpForData.getHistoryData(code);
+      fundMap[code] = await DataManager.getData(code);
     }
     FundUtil.calculateList(fundMap[code]);
   }

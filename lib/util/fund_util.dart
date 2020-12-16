@@ -1,6 +1,7 @@
 import 'dart:math';
 
-import 'package:magic_fund/box/fund_bean.dart';
+import 'package:magic_fund/db/fund_bean.dart';
+
 
 class FundUtil {
 

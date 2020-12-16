@@ -1,0 +1,114 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:632429744396753866",
+      "lastPropertyId": "14:4608639962066571630",
+      "name": "FundInfoEntity",
+      "properties": [
+        {
+          "id": "1:5042280733691393600",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4406073545106133302",
+          "name": "date",
+          "type": 9
+        },
+        {
+          "id": "3:537622413430472249",
+          "name": "netWorth",
+          "type": 8
+        },
+        {
+          "id": "4:4032865668946396427",
+          "name": "recentAverage",
+          "type": 8
+        },
+        {
+          "id": "5:8475809111508380187",
+          "name": "recentAverageTop",
+          "type": 8
+        },
+        {
+          "id": "6:8290962819272043474",
+          "name": "recentAverageBottom",
+          "type": 8
+        },
+        {
+          "id": "7:131000496370466662",
+          "name": "energyColumn",
+          "type": 8
+        },
+        {
+          "id": "8:8763305784829816782",
+          "name": "stopMoney",
+          "type": 8
+        },
+        {
+          "id": "9:2084272520297700895",
+          "name": "addMoney",
+          "type": 8
+        },
+        {
+          "id": "10:830417308016117035",
+          "name": "wave",
+          "type": 8
+        },
+        {
+          "id": "11:5390789494064334763",
+          "name": "waveRecentAverage",
+          "type": 8
+        },
+        {
+          "id": "12:8815456755453250139",
+          "name": "waveVariance",
+          "type": 8
+        },
+        {
+          "id": "13:5498853158397876835",
+          "name": "recentWave",
+          "type": 8
+        },
+        {
+          "id": "14:4608639962066571630",
+          "name": "result",
+          "type": 9
+        }
+      ]
+    },
+    {
+      "id": "2:6099811182382692305",
+      "lastPropertyId": "2:5451066351632914518",
+      "name": "FundMapEntity",
+      "properties": [
+        {
+          "id": "1:6049763127546726320",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5451066351632914518",
+          "name": "code",
+          "type": 9
+        }
+      ]
+    }
+  ],
+  "lastEntityId": "2:6099811182382692305",
+  "lastIndexId": "0:0",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [],
+  "retiredRelationUids": [],
+  "version": 1
+}

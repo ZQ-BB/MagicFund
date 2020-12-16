@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:preferences/preference_service.dart';
-import 'home.dart';
+import 'page/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
