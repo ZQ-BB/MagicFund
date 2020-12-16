@@ -4,6 +4,11 @@ import 'package:magic_fund/db/fund_map_bean.dart';
 import 'package:magic_fund/db/objectbox_utils.dart';
 import 'package:magic_fund/net/http_for_data.dart';
 
+import '../net/http_for_data.dart';
+import 'date_util.dart';
+import 'fund_util.dart';
+import 'fund_util.dart';
+
 class DataManager {
 
   static Future<List<FundInfoEntity>> getData(String code) async{
@@ -12,34 +17,55 @@ class DataManager {
     // 先通过数据库查询
     result = await DBForData.getData(code);
 
-    // 数据库不存在数据
-    if (result.isEmpty) {
+    if (result.isEmpty) { // 数据库不存在数据
       // 网络请求获取数据
-      _httpForData(result, code, () {
-        // 本地存储
-        ObjectBoxUtils.instance.addFundMap(
-            fundMapEntity: FundMapEntity()
-              ..code = code
-              ..fundInfo = result
-        );
-        return result;
-      });
-    } else {
-      return result;
-    }
-  }
+      result.addAll(await HttpForData.getHistoryData(code, page: 1));
+      result.addAll(await HttpForData.getHistoryData(code, page: 2));
 
-  static _httpForData(List list, String code, Function callback){
-    HttpForData.getHistoryData(code, page: 1).then((value) {
-      if (list.isEmpty) {
-        list.addAll(value);
-      } else {
-        list.insertAll(0, value);
+      // 计算基金的其他数据
+      FundUtil.calculateList(result);
+
+      // 保存到数据库
+      ObjectBoxUtils.instance.addFundMap(
+          fundMapEntity: FundMapEntity()
+            ..code = code
+            ..fundInfo = result
+      );
+    } else { // 判断日期
+      // 获取相差的天数
+      var days = DateUtil.calculateDifferenceInDay(result.first.date);
+
+      // 接口获取的列表
+      List<FundInfoEntity> tempList = List();
+      // 总共需要的页数
+      var pages = days / 40 + 1;
+
+      // 循环调用接口 获取数据
+      for(var i = 0; i<pages; i++) {
+        var per = i == pages - 1 ? days % 40 : 40;
+        tempList.addAll(await HttpForData.getHistoryData(code, per: per, page: i+1));
       }
-    });
 
-    HttpForData.getHistoryData(code, page: 2).then((value) {
-      list.addAll(value);
-    });
+      // 去除重复项
+      var index = tempList.lastIndexWhere((element) => element.date == result.first.date);
+      if(index != -1) {
+        tempList.removeRange(index, tempList.length);
+      }
+
+      // 计算并添加
+      for(var i = tempList.length-1; i>=0; i--) {
+        FundUtil.calculateOne(tempList[i], result.sublist(0,FundUtil.recentNum));
+        result.add(tempList[i]);
+      }
+
+      // 更新数据库
+      ObjectBoxUtils.instance.addFundMap(
+          fundMapEntity: FundMapEntity()
+            ..code = code
+            ..fundInfo = result
+      );
+    }
+
+    return result;
   }
 }

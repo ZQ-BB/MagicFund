@@ -47,104 +47,96 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     List flag = List(list.length);
-    var i = 0;
-    list.forEach((element) async{
+    for(var i = 0; i<list.length; i++) {
       flag[i] = 0;
-      try {
-        await _getHistoryData(element);
-        fundInfo.add(FundInfo()..code = element);
+      _getHistoryData(list[i]).then((value) {
+        fundInfo.add(FundInfo()..code = list[i]);
         flag[i] = 1;
 
         if(!flag.contains(0)) {
-          await EasyLoading.dismiss();
+          EasyLoading.dismiss();
           refreshController.callRefresh();
         }
-        i++;
-      }catch (e) {
-        print(e);
-      }
-    });
+      });
+    }
   }
 
-  _getHistoryData(String code) async {
+  /// 获取历史数据
+  Future<void> _getHistoryData(String code) async {
     if(!fundMap.containsKey(code)) {
       fundMap[code] = await DataManager.getData(code);
     }
-    FundUtil.calculateList(fundMap[code]);
   }
 
   /// 添加新基金
-  _addNewFund() async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('输入基金代码'),
-          content: Container(
-            child: TextField(
-              controller: text,
-            ),
-          ),
-          actions: [
-            FlatButton(
-              onPressed: () async {
-                await EasyLoading.show();
-                try {
-                  await _getHistoryData(text.text);
+  Future<void> _addNewFund() async {
+    await EasyLoading.show();
+    try {
+      await _getHistoryData(text.text);
 
-                  fundInfo.add(FundInfo()..code = text.text);
-                  PrefService.sharedPreferences.setStringList("fund_code_list", fundInfo.map((e) => e.code).toList());
-                }catch(e) {
-                  print(e);
-                }
-                await EasyLoading.dismiss();
-                Navigator.pop(context);
+      fundInfo.add(FundInfo()..code = text.text);
+      PrefService.sharedPreferences.setStringList("fund_code_list", fundInfo.map((e) => e.code).toList());
+    }catch(e) {
+      print(e);
+    }
+    await EasyLoading.dismiss();
 
-                refreshController.callRefresh();
-              },
-              child: Text('确认')
-            )
-          ],
-        );
-      }
-    );
+    refreshController.callRefresh();
   }
 
   /// 刷新当前数据
   Future<void> _refreshData() async {
-    // 防止没有
-    var removeCodeList = List();
 
-    for (var value in fundInfo) {
+    List removeList = List();
+    var flag = List(fundInfo.length);
+    _callback() {
+      removeList.forEach((element) {
+        fundInfo.remove(element);
+      });
+      _refreshUI();
+    }
+
+    for(var i = 0; i<fundInfo.length; i++) {
+      flag[i] = 0;
+
       try {
-        var currentInfo = await HttpForData.getCurrentData(value.code);
-        value.name = currentInfo.name;
-        value.valuation = double.parse(currentInfo.gsz);
-        value.growthRate = double.parse(currentInfo.gszzl);
-        value.estimatedTime = currentInfo.gztime;
+        HttpForData.getCurrentData(fundInfo[i].code).then((current) {
+          fundInfo[i].name = current.name;
+          fundInfo[i].valuation = double.parse(current.gsz);
+          fundInfo[i].growthRate = double.parse(current.gszzl);
+          fundInfo[i].estimatedTime = current.gztime;
 
-        if (fundMap.containsKey(value.code)) {
-          var fundInfoEntity = FundInfoEntity()..netWorth = value.valuation;
-          await FundUtil.calculateOne(fundInfoEntity, fundMap[value.code].sublist(0, FundUtil.recentNum-1));
-          value.result = fundInfoEntity.result;
-        } else {
-          removeCodeList.add(value.code);
-        }
+          //TODO 没有做日期的判断
+          if (fundMap.containsKey(fundInfo[i].code)) {
+            var fundInfoEntity = FundInfoEntity()..netWorth = fundInfo[i].valuation;
+            FundUtil.calculateOne(fundInfoEntity, fundMap[fundInfo[i].code].sublist(0, FundUtil.recentNum-1));
+            fundInfo[i].result = fundInfoEntity.result;
+          } else {
+            removeList.add(fundInfo[i]);
+          }
+          flag[i] = 1;
+
+          if(!flag.contains(0)) {
+            _callback();
+          }
+        });
       }catch(e) {
-        if (fundMap.containsKey(value.code)) {
-          value.name = '';
-          value.valuation = null;
-          value.growthRate = null;
-          value.result = fundMap[value.code].first.result;
+        if (fundMap.containsKey(fundInfo[i].code)) {
+          fundInfo[i].name = '';
+          fundInfo[i].valuation = null;
+          fundInfo[i].growthRate = null;
+          fundInfo[i].result = fundMap[fundInfo[i].code].first.result;
         } else {
-          removeCodeList.add(value.code);
+          removeList.add(fundInfo[i]);
+        }
+        flag[i] = 1;
+
+        if(!flag.contains(0)) {
+          _callback();
         }
       }
     }
 
-    fundInfo.removeWhere((element) => removeCodeList.contains(element.code));
-
-    _refreshUI();
   }
 
   @override
@@ -206,12 +198,36 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addNewFund,
+        onPressed: () async {
+          showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text('输入基金代码'),
+                  content: Container(
+                    child: TextField(
+                      controller: text,
+                    ),
+                  ),
+                  actions: [
+                    FlatButton(
+                        onPressed: () async {
+                          await _addNewFund();
+                          Navigator.pop(context);
+                        },
+                        child: Text('确认')
+                    )
+                  ],
+                );
+              }
+          );
+        },
         child: Icon(Icons.add),
       ),
     );
   }
 
+  /// 刷新UI
   _refreshUI() {
     setState(() {});
   }
