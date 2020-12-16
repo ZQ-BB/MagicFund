@@ -6,7 +6,7 @@ class DBForData {
 
   static Future<List<FundInfoEntity>> getData(String code) async{
     var fundMap = await ObjectBoxUtils.instance.queryFundMap(code);
-    if (fundMap != null) {
+    if (fundMap != null && fundMap.fundInfo != null) {
       return fundMap.fundInfo;
     }else {
       return List();

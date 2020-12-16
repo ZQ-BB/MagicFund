@@ -352,6 +352,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.10.0"
+  objectbox_flutter_libs:
+    dependency: "direct main"
+    description:
+      name: objectbox_flutter_libs
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.10.0"
   objectbox_generator:
     dependency: "direct dev"
     description:
