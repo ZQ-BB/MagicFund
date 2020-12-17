@@ -5,9 +5,9 @@ import 'fund_bean.dart';
 class DBForData {
 
   static Future<List<FundInfoEntity>> getData(String code) async{
-    var fundMap = await ObjectBoxUtils.instance.queryFundMap(code);
-    if (fundMap != null && fundMap.fundInfo != null) {
-      return fundMap.fundInfo;
+    var fundEntityList = await ObjectBoxUtils.instance.queryFundEntity(code);
+    if (fundEntityList != null) {
+      return fundEntityList;
     }else {
       return List();
     }

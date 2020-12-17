@@ -1,11 +1,13 @@
-import 'package:magic_fund/db/fund_map_bean.dart';
-import 'package:magic_fund/objectbox.g.dart';
+import 'package:magic_fund/db/fund_bean.dart';
+import 'package:magic_fund/util/fund_util.dart';
 import 'package:path_provider/path_provider.dart' as pathProvider;
+
+import '../objectbox.g.dart';
 
 class ObjectBoxUtils {
 
   var _store;
-  Box<FundMapEntity> _box;
+  Box<FundInfoEntity> _box;
 
   /// 单例模式
   // 工厂模式
@@ -23,39 +25,27 @@ class ObjectBoxUtils {
   }
 
 
-  Future<FundMapEntity> queryFundMap(String code) async{
+  Future<List<FundInfoEntity>> queryFundEntity(String code) async{
     await _initData();
-    return _box.query(FundMapEntity_.code.equals(code)).build().findFirst();
+    return _box.query(FundInfoEntity_.code.equals(code)).order(FundInfoEntity_.date, flags: 1).build().find(limit: FundUtil.recentNum - 1);
   }
 
-  Future<bool> addFundMap({FundMapEntity fundMapEntity, List<FundMapEntity> fundMapEntityList}) async{
+  Future<bool> addFundEntity(List<FundInfoEntity> fundInfoEntityList) async{
     await _initData();
     try {
-      if (fundMapEntity != null) {
-        _box.put(fundMapEntity);
-        return true;
-      } else if(fundMapEntityList != null && fundMapEntityList.isNotEmpty){
-        _box.putMany(fundMapEntityList);
-        return true;
-      } else {
-        return false;
-      }
+      _box.putMany(fundInfoEntityList);
+      return true;
     }catch (e) {
       return false;
     }
-
   }
 
-  Future removeFundMap(int id) async {
-    await _initData();
-    return _box.remove(id);
-  }
 
   _initData() async{
     if(_store == null) {
       var dir = await pathProvider.getTemporaryDirectory();
       _store = Store(getObjectBoxModel(), directory: dir.path + '/objectbox');
-      _box = Box<FundMapEntity>(_store);
+      _box = Box<FundInfoEntity>(_store);
     }
   }
 

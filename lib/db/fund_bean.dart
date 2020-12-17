@@ -4,6 +4,10 @@ import 'package:objectbox/objectbox.dart';
 class FundInfoEntity {
   @Id()
   int id;
+
+  @Index()
+  String code;
+
   String date;
   double netWorth;
   double recentAverage;

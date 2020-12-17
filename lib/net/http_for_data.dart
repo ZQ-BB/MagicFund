@@ -24,6 +24,7 @@ class HttpForData {
     var document = XmlDocument.parse(body);
     document.firstChild.lastChild.children.forEach((element) {
       list.add(FundInfoEntity()
+          ..code = fundCode
           ..date = element.children[0].text
           ..netWorth = double.parse(element.children[1].text)
       );
