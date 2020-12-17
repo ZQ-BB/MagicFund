@@ -3,8 +3,10 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:magic_fund/bean/fund_info.dart';
 import 'package:magic_fund/db/fund_bean.dart';
+import 'package:magic_fund/net/fund_current_info.dart';
 import 'package:magic_fund/net/http_for_data.dart';
 import 'package:magic_fund/util/data_manager.dart';
 import 'package:magic_fund/util/fund_util.dart';
@@ -74,16 +76,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// 添加新基金
   Future<void> _addNewFund() async {
-    await EasyLoading.show();
-    try {
-      await _getHistoryData(text.text);
+    var code = text.text;
 
-      fundInfo.add(FundInfo()..code = text.text);
+    // 判断重复
+    if (fundInfo.any((element) => element.code == code)) {
+      Fluttertoast.showToast(msg: "该基金代码已添加");
+    }
+
+    EasyLoading.show();
+    try {
+      await _getHistoryData(code);
+
+      fundInfo.add(FundInfo()..code = code);
       PrefService.sharedPreferences.setStringList("fund_code_list", fundInfo.map((e) => e.code).toList());
     }catch(e) {
-      print(e);
+      Fluttertoast.showToast(msg: "基金代码有误");
     }
-    await EasyLoading.dismiss();
+    EasyLoading.dismiss();
 
     refreshController.callRefresh();
   }
@@ -92,38 +101,23 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _refreshData() async {
 
     List removeList = List();
-    var flag = List(fundInfo.length);
-    _callback() {
-      removeList.forEach((element) {
-        fundInfo.remove(element);
-      });
-      _refreshUI();
-    }
 
     for(var i = 0; i<fundInfo.length; i++) {
-      flag[i] = 0;
-
       try {
-        HttpForData.getCurrentData(fundInfo[i].code).then((current) {
-          fundInfo[i].name = current.name;
-          fundInfo[i].valuation = double.parse(current.gsz);
-          fundInfo[i].growthRate = double.parse(current.gszzl);
-          fundInfo[i].estimatedTime = current.gztime;
+        FundCurrentInfo current = await HttpForData.getCurrentData(fundInfo[i].code);
+        fundInfo[i].name = current.name;
+        fundInfo[i].valuation = double.parse(current.gsz);
+        fundInfo[i].growthRate = double.parse(current.gszzl);
+        fundInfo[i].estimatedTime = current.gztime;
 
-          //没有做日期的判断(判断有点难)
-          if (fundMap.containsKey(fundInfo[i].code)) {
-            var fundInfoEntity = FundInfoEntity()..netWorth = fundInfo[i].valuation;
-            FundUtil.calculateOne(fundInfoEntity, fundMap[fundInfo[i].code].sublist(0,   -1));
-            fundInfo[i].result = fundInfoEntity.result;
-          } else {
-            removeList.add(fundInfo[i]);
-          }
-          flag[i] = 1;
-
-          if(!flag.contains(0)) {
-            _callback();
-          }
-        });
+        //没有做日期的判断(判断有点难)
+        if (fundMap.containsKey(fundInfo[i].code)) {
+          var fundInfoEntity = FundInfoEntity()..netWorth = fundInfo[i].valuation;
+          FundUtil.calculateOne(fundInfoEntity, fundMap[fundInfo[i].code].sublist(0, FundUtil.recentNum -1));
+          fundInfo[i].result = fundInfoEntity.result;
+        } else {
+          removeList.add(fundInfo[i]);
+        }
       }catch(e) {
         if (fundMap.containsKey(fundInfo[i].code)) {
           fundInfo[i].name = '';
@@ -133,13 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
         } else {
           removeList.add(fundInfo[i]);
         }
-        flag[i] = 1;
-
-        if(!flag.contains(0)) {
-          _callback();
-        }
       }
     }
+    removeList.forEach((element) {
+      fundInfo.remove(element);
+    });
+    _refreshUI();
 
   }
 
