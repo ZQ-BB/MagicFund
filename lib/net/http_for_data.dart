@@ -8,8 +8,10 @@ import 'package:xml/xml.dart';
 
 class HttpForData {
 
+  static const numPerPage = 45;
+
   /// 获取历史数据
-  static Future<List<FundInfoEntity>> getHistoryData(String fundCode,{int per = 40, int page = 1}) async{
+  static Future<List<FundInfoEntity>> getHistoryData(String fundCode,{int per = numPerPage, int page = 1}) async{
     List<FundInfoEntity> list = List();
 
     var url = 'https://fundf10.eastmoney.com/F10DataApi.aspx?type=lsjz&code=$fundCode&sdate=2020-01-01&edate=2030-01-01&per=$per&page=$page';

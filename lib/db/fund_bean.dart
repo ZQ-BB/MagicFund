@@ -20,6 +20,8 @@ class FundInfoEntity {
   double waveRecentAverage;
   double waveVariance;
   double recentWave;
+  double growthRate;
+  double result2;
   String result;
 
   FundInfoEntity({
@@ -35,6 +37,8 @@ class FundInfoEntity {
     this.waveRecentAverage,
     this.waveVariance,
     this.recentWave,
+    this.growthRate,
+    this.result2,
     this.result
   });
 
@@ -52,6 +56,8 @@ class FundInfoEntity {
       "waveRecentAverage: $waveRecentAverage, "
       "waveVariance: $waveVariance, "
       "recentWave: $recentWave, "
+      "growthRate: $growthRate, "
+      "result2: $result2, "
       "result: $result, "
       "}";
 }

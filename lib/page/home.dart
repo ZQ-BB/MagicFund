@@ -113,8 +113,9 @@ class _MyHomePageState extends State<MyHomePage> {
         //没有做日期的判断(判断有点难)
         if (fundMap.containsKey(fundInfo[i].code)) {
           var fundInfoEntity = FundInfoEntity()..netWorth = fundInfo[i].valuation;
-          FundUtil.calculateOne(fundInfoEntity, fundMap[fundInfo[i].code].sublist(0, FundUtil.recentNum -1));
+          FundUtil.calculateOne(fundInfoEntity, fundMap[fundInfo[i].code].sublist(0, FundUtil.minTotalNum -1));
           fundInfo[i].result = fundInfoEntity.result;
+          fundInfo[i].result2 = fundInfoEntity.result2;
         } else {
           removeList.add(fundInfo[i]);
         }
@@ -124,6 +125,7 @@ class _MyHomePageState extends State<MyHomePage> {
           fundInfo[i].valuation = null;
           fundInfo[i].growthRate = null;
           fundInfo[i].result = fundMap[fundInfo[i].code].first.result;
+          fundInfo[i].result2 = fundMap[fundInfo[i].code].first.result2;
         } else {
           removeList.add(fundInfo[i]);
         }
@@ -186,7 +188,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       )
                     ],
                   ),
-                  trailing: Text(info.result??''),
+                  trailing: Column(
+                    children: [
+                      Text(info.result??''),
+                      info.result2 != null ? Text(
+                        '${info.result2}',
+                        style: TextStyle(
+                            color: info.result2 > 0 ? Colors.deepOrange[400]
+                                : Colors.green[400]
+                        )) : Text(''),
+                    ],
+                  ),
                 );
               },
               separatorBuilder: (context, index) => Divider(),

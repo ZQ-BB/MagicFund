@@ -4,5 +4,6 @@ class FundInfo {
   double valuation;
   String estimatedTime;
   double growthRate;
+  double result2;
   String result;
 }

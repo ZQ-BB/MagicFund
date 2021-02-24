@@ -32,6 +32,7 @@ dependencies:
   flutter_easyloading: ^2.2.1
   flutter_easyrefresh: ^2.1.6
   fluttertoast: ^7.1.5
+  fl_chart: ^0.12.2
 
 dev_dependencies:
   flutter_test:

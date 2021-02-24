@@ -19,6 +19,7 @@ class DataManager {
       // 网络请求获取数据
       result.addAll(await HttpForData.getHistoryData(code, page: 1));
       result.addAll(await HttpForData.getHistoryData(code, page: 2));
+      result.addAll(await HttpForData.getHistoryData(code, page: 3));
 
       // 计算基金的其他数据
       FundUtil.calculateList(result);
@@ -33,11 +34,11 @@ class DataManager {
         // 接口获取的列表
         List<FundInfoEntity> tempList = List();
         // 总共需要的页数
-        int pages = (days ~/ 40) + 1;
+        int pages = (days ~/ HttpForData.numPerPage) + 1;
 
         // 循环调用接口 获取数据
         for(var i = 0; i<pages; i++) {
-          var per = i == pages - 1 ? days % 40 : 40;
+          var per = i == pages - 1 ? days % HttpForData.numPerPage : HttpForData.numPerPage;
           tempList.addAll(await HttpForData.getHistoryData(code, per: per, page: i+1));
         }
 

@@ -6,12 +6,13 @@ import 'package:magic_fund/db/fund_bean.dart';
 class FundUtil {
 
   static int recentNum = 20;
+  static int minTotalNum = 125;
 
   static calculateList(List<FundInfoEntity> recentFundInfo) {
     List<FundInfoEntity> list = List();
     for(var i = recentFundInfo.length - 1; i>=0; i--) {
       calculateOne(recentFundInfo[i], list);
-      if(list.length == recentNum - 1) {
+      if(list.length == minTotalNum - 1) {
         list.removeLast();
       }
       list.insert(0, recentFundInfo[i]);
@@ -19,23 +20,22 @@ class FundUtil {
   }
 
   static calculateOne(FundInfoEntity fundInfo, List<FundInfoEntity> recentFundInfo) {
+    var temp = 0;
     // C
-    fundInfo.recentAverage = 0;
-    recentFundInfo.forEach((element) {
-      fundInfo.recentAverage += element.netWorth;
-    });
-    fundInfo.recentAverage += fundInfo.netWorth;
+    fundInfo.recentAverage = fundInfo.netWorth;
+    for(temp = 0; temp < recentNum - 1 && temp < recentFundInfo.length; temp++) {
+      fundInfo.recentAverage += recentFundInfo[temp].netWorth;
+    }
     fundInfo.recentAverage /= recentNum;
 
     // I
     fundInfo.wave = pow(fundInfo.recentAverage - fundInfo.netWorth, 2);
 
     // J
-    fundInfo.waveRecentAverage = 0;
-    recentFundInfo.forEach((element) {
-      fundInfo.waveRecentAverage += element.wave;
-    });
-    fundInfo.waveRecentAverage += fundInfo.wave;
+    fundInfo.waveRecentAverage = fundInfo.wave;
+    for(temp = 0; temp < recentNum - 1 && temp < recentFundInfo.length; temp++) {
+      fundInfo.waveRecentAverage += recentFundInfo[temp].wave;
+    }
     fundInfo.waveRecentAverage /= recentNum;
 
     // K
@@ -57,12 +57,29 @@ class FundUtil {
     fundInfo.addMoney = fundInfo.recentAverage + (fundInfo.recentAverageBottom - fundInfo.recentAverage)*0.309;
 
     // L
-    fundInfo.recentWave = 1;
-    try {
+    if(recentNum-2 < recentFundInfo.length) {
       fundInfo.recentWave = 1 - recentFundInfo[recentNum-2].netWorth / fundInfo.netWorth;
-    }catch(e) {
-      print(e);
+    } else {
+      fundInfo.recentWave = 1;
     }
+
+    // 增长率
+    if(recentFundInfo.isNotEmpty) {
+      fundInfo.growthRate = (fundInfo.netWorth - recentFundInfo[0].netWorth) / recentFundInfo[0].netWorth;
+    } else {
+      fundInfo.growthRate = 0.toDouble();
+    }
+
+    // 短线result
+    double sum5 = fundInfo.growthRate;
+    for(temp = 0; temp < 4 && temp < recentFundInfo.length; temp++) {
+      sum5 += recentFundInfo[temp].growthRate;
+    }
+    double sumTotal = fundInfo.growthRate;
+    for(temp = 0; temp < recentFundInfo.length; temp++) {
+      sum5 += recentFundInfo[temp].growthRate;
+    }
+    fundInfo.result2 = sum5 - sumTotal/25;
 
     // result
     var a = false;
